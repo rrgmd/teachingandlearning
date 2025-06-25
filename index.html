@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Journey of a Memory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            background-color: #1a202c; /* A dark, brainy background */
+        }
+
+        .brain-bg {
+            background-image: url('https://placehold.co/800x600/1A202C/FFFFFF?text=Brain+Silhouette');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70vw;
+            height: 70vh;
+            opacity: 0.1;
+        }
+
+        .brain-region {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(29, 161, 242, 0.5);
+            box-shadow: 0 0 15px 5px rgba(29, 161, 242, 0.7);
+            transition: all 0.5s ease-in-out;
+            transform: scale(0);
+        }
+
+        .brain-region.active {
+            transform: scale(1);
+        }
+        
+        #pfc { top: 25%; left: 35%; width: 100px; height: 100px; }
+        #temporal-cortex { top: 60%; left: 30%; width: 80px; height: 80px; }
+        #hippocampus { top: 55%; left: 48%; width: 50px; height: 50px; background-color: rgba(255, 107, 107, 0.5); box-shadow: 0 0 15px 5px rgba(255, 107, 107, 0.7); }
+        #sensory-cortex { top: 40%; left: 65%; width: 70px; height: 70px; background-color: rgba(88, 229, 122, 0.5); box-shadow: 0 0 15px 5px rgba(88, 229, 122, 0.7); }
+
+
+        .game-card {
+            background-color: rgba(45, 55, 72, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+
+        .distraction {
+            position: absolute;
+            background-color: rgba(237, 100, 166, 0.8);
+            padding: 8px 16px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .distraction:hover {
+            transform: scale(1.1);
+        }
+        
+        #fact-to-learn {
+             background-color: rgba(66, 153, 225, 0.8);
+             cursor: pointer;
+        }
+
+        .connection-point {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #4299e1;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #4299e1;
+        }
+
+        .memory-orb {
+             width: 60px;
+             height: 60px;
+             border-radius: 50%;
+             position: absolute;
+             transition: all 2s ease-in-out;
+             background: radial-gradient(circle, #a7f3d0, #38b2ac);
+             box-shadow: 0 0 20px #6ee7b7;
+             opacity: 0;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px #6ee7b7; }
+            50% { transform: scale(1.1); box-shadow: 0 0 35px #a7f3d0; }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center h-screen p-4">
+
+    <div class="brain-bg"></div>
+    <!-- Brain Region Visuals -->
+    <div id="pfc" class="brain-region"><span class="relative left-1/4 top-1/3 text-xs">PFC</span></div>
+    <div id="temporal-cortex" class="brain-region"><span class="relative left-1/4 top-1/3 text-xs">Temporal</span></div>
+    <div id="hippocampus" class="brain-region"><span class="relative left-1/4 top-1/3 text-xs">Hippo.</span></div>
+    <div id="sensory-cortex" class="brain-region"><span class="relative left-1/4 top-1/3 text-xs">Sensory</span></div>
+
+    <!-- Game UI -->
+    <div id="game-container" class="w-full max-w-4xl mx-auto z-10">
+        <div class="game-card rounded-2xl p-6 md:p-8 shadow-2xl">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="text-2xl md:text-3xl font-bold text-teal-300">The Journey of a Memory</h1>
+                <p id="step-title" class="text-lg md:text-xl text-gray-300 mt-1">Step 1: Paying Attention</p>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-700 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="bg-teal-400 h-2.5 rounded-full" style="width: 12.5%"></div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div id="game-area" class="min-h-[300px] flex flex-col items-center justify-center p-4 rounded-lg bg-gray-800/50 relative overflow-hidden">
+                <!-- Content will be injected by JS -->
+            </div>
+
+            <!-- Description -->
+            <div class="mt-6 text-center">
+                <h3 class="font-bold text-lg text-teal-400">What's Happening?</h3>
+                <p id="step-description" class="text-gray-400 mt-2 mx-auto max-w-2xl">Your Prefrontal Cortex (PFC) acts like a spotlight, shining your attention on the new information and filtering out distractions.</p>
+            </div>
+            
+            <!-- Next Button -->
+            <div class="text-center mt-6">
+                 <button id="next-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 hidden">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const game = {
+            currentStep: 0,
+            fact: "Mitochondria are the powerhouses of the cell.",
+            distractions: [
+                "The sky is blue.",
+                "Pizza is delicious.",
+                "Sleep is important.",
+                "Birds can fly.",
+            ],
+            steps: [
+                {
+                    title: "Paying Attention",
+                    description: "Your Prefrontal Cortex (PFC) acts like a spotlight, shining your attention on the new information and filtering out distractions.",
+                    activeRegions: ["pfc", "sensory-cortex"],
+                    setup: setupStep1,
+                },
+                {
+                    title: "Working Memory",
+                    description: "The PFC holds the information in a 'mental sticky note.' This isn't storage yet, just active maintenance.",
+                    activeRegions: ["pfc"],
+                    setup: setupStep2,
+                },
+                {
+                    title: "Making Connections",
+                    description: "The PFC and Temporal Cortex work together to link the new fact to what you already know, making it meaningful.",
+                    activeRegions: ["pfc", "temporal-cortex"],
+                    setup: setupStep3,
+                },
+                {
+                    title: "Hippocampal Binding",
+                    description: "The Hippocampus acts like a librarian, creating an 'index' that links all the different parts of the memory together.",
+                    activeRegions: ["hippocampus"],
+                    setup: setupStep4,
+                },
+                {
+                    title: "Strategic Encoding",
+                    description: "The PFC signals to the Hippocampus that this information is important, strengthening the memory trace.",
+                    activeRegions: ["pfc", "hippocampus"],
+                    setup: setupStep5,
+                },
+                {
+                    title: "Synaptic Consolidation",
+                    description: "While you rest or sleep, the Hippocampus replays the memory to strengthen the synaptic connections, like saving a file.",
+                    activeRegions: ["hippocampus"],
+                    setup: setupStep6,
+                },
+                {
+                    title: "Systems Consolidation",
+                    description: "Over time, the memory moves from the Hippocampus to be stored independently in the Temporal Cortex for long-term access.",
+                    activeRegions: ["hippocampus", "temporal-cortex", "pfc"],
+                    setup: setupStep7,
+                },
+                {
+                    title: "Retrieval",
+                    description: "Your PFC initiates a search, using the cortical networks to recall the information. Each retrieval strengthens the memory!",
+                    activeRegions: ["pfc", "temporal-cortex"],
+                    setup: setupStep8,
+                },
+                {
+                    title: "Memory Formed!",
+                    description: "Congratulations! You've successfully transformed a new piece of information into lasting knowledge.",
+                    activeRegions: ["pfc", "temporal-cortex"],
+                    setup: setupEndScreen,
+                }
+            ],
+        };
+
+        const gameArea = document.getElementById('game-area');
+        const nextButton = document.getElementById('next-button');
+
+        function updateUI() {
+            const step = game.steps[game.currentStep];
+            document.getElementById('step-title').textContent = `Step ${game.currentStep + 1}: ${step.title}`;
+            document.getElementById('step-description').textContent = step.description;
+            document.getElementById('progress-bar').style.width = `${((game.currentStep + 1) / game.steps.length) * 100}%`;
+
+            // Update brain regions
+            document.querySelectorAll('.brain-region').forEach(el => el.classList.remove('active'));
+            step.activeRegions.forEach(regionId => {
+                document.getElementById(regionId)?.classList.add('active');
+            });
+
+            step.setup();
+        }
+        
+        function advanceStep() {
+            if (game.currentStep < game.steps.length - 1) {
+                game.currentStep++;
+                nextButton.classList.add('hidden');
+                updateUI();
+            }
+        }
+        
+        nextButton.addEventListener('click', advanceStep);
+
+        // --- Step-specific setup functions ---
+
+        function setupStep1() {
+            gameArea.innerHTML = `<p class="text-gray-400 mb-4">Click on the correct fact to focus your attention!</p>`;
+            const allItems = [...game.distractions, game.fact];
+            shuffleArray(allItems).forEach(item => {
+                const el = document.createElement('div');
+                el.textContent = item;
+                el.className = 'distraction';
+                if (item === game.fact) {
+                    el.id = 'fact-to-learn';
+                    el.style.backgroundColor = 'rgba(66, 153, 225, 0.8)';
+                    el.addEventListener('click', () => {
+                        gameArea.innerHTML = `<p class="text-2xl text-green-400 font-bold">Focused!</p>`;
+                        nextButton.classList.remove('hidden');
+                    });
+                } else {
+                     el.addEventListener('click', () => {
+                        el.style.backgroundColor = 'rgba(229, 62, 62, 0.8)';
+                        el.textContent = 'Distraction!';
+                    });
+                }
+                // Position randomly
+                el.style.top = `${Math.random() * 80 + 10}%`;
+                el.style.left = `${Math.random() * 80 + 10}%`;
+                gameArea.appendChild(el);
+            });
+        }
+        
+        function setupStep2() {
+            gameArea.innerHTML = `
+                <p class="text-gray-400 mb-4">Hold this in your working memory. Type it below:</p>
+                <p class="text-xl font-semibold text-center text-teal-300 mb-4 p-2 bg-gray-900/50 rounded-lg">${game.fact}</p>
+                <input id="wm-input" type="text" class="w-full max-w-md bg-gray-900 text-white p-2 rounded-lg border-2 border-gray-600 focus:border-teal-400 focus:outline-none" placeholder="Type the fact here...">
+                <p id="wm-feedback" class="mt-2 h-4"></p>
+            `;
+            const input = document.getElementById('wm-input');
+            input.addEventListener('input', () => {
+                if (input.value.toLowerCase() === game.fact.toLowerCase()) {
+                    document.getElementById('wm-feedback').textContent = "Perfectly recalled!";
+                    document.getElementById('wm-feedback').classList.add('text-green-400');
+                    input.disabled = true;
+                    nextButton.classList.remove('hidden');
+                }
+            });
+        }
+        
+        function setupStep3() {
+             gameArea.innerHTML = `
+                <p class="text-gray-400 mb-4">Make connections to strengthen the memory. Drag related concepts to the fact.</p>
+                <div id="fact-droppable" class="p-4 rounded-lg bg-blue-900/50 border-2 border-dashed border-blue-400 text-center">
+                    <p>${game.fact}</p>
+                    <div id="connections-made" class="flex justify-center space-x-2 mt-2"></div>
+                </div>
+                <div id="concepts" class="flex flex-wrap justify-center gap-4 mt-6"></div>
+             `;
+             
+             const concepts = ["Energy", "Cells", "Biology", "Shoes"]; // one unrelated
+             const droppable = document.getElementById('fact-droppable');
+             const conceptsContainer = document.getElementById('concepts');
+             let connections = 0;
+
+             concepts.forEach(c => {
+                 const el = document.createElement('div');
+                 el.textContent = c;
+                 el.className = 'p-2 bg-teal-600 rounded-lg cursor-grab';
+                 el.draggable = true;
+                 el.id = `concept-${c}`;
+                 el.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c));
+                 conceptsContainer.appendChild(el);
+             });
+             
+             droppable.addEventListener('dragover', e => e.preventDefault());
+             droppable.addEventListener('drop', e => {
+                e.preventDefault();
+                const concept = e.dataTransfer.getData('text/plain');
+                const conceptEl = document.getElementById(`concept-${concept}`);
+                if (concept !== "Shoes") {
+                    conceptEl.classList.add('hidden');
+                    const connectionIndicator = document.createElement('div');
+                    connectionIndicator.className = 'w-4 h-4 bg-green-400 rounded-full';
+                    document.getElementById('connections-made').appendChild(connectionIndicator);
+                    connections++;
+                    if (connections >= 3) {
+                         nextButton.classList.remove('hidden');
+                    }
+                } else {
+                    conceptEl.style.backgroundColor = "#e53e3e";
+                    conceptEl.textContent = "Not related!";
+                }
+             });
+        }
+
+        function setupStep4() {
+             gameArea.innerHTML = `
+                <p class="text-gray-400 mb-4">Information streams are flowing to the Hippocampus. Click it to bind them into a single memory trace!</p>
+                <div id="binding-area" class="w-48 h-48 rounded-full bg-red-800/50 flex items-center justify-center cursor-pointer relative">
+                    <span class="font-bold text-red-300">HIPPOCAMPUS</span>
+                </div>
+            `;
+            const bindingArea = document.getElementById('binding-area');
+            
+            // Create "information streams"
+            for (let i = 0; i < 5; i++) {
+                const stream = document.createElement('div');
+                stream.className = 'connection-point';
+                const angle = (i / 5) * 2 * Math.PI;
+                stream.style.left = `${50 + 45 * Math.cos(angle)}%`;
+                stream.style.top = `${50 + 45 * Math.sin(angle)}%`;
+                bindingArea.appendChild(stream);
+            }
+            
+            bindingArea.addEventListener('click', () => {
+                bindingArea.innerHTML = `<div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 animate-pulse"></div>`;
+                bindingArea.style.cursor = 'default';
+                document.querySelector('.text-gray-400').textContent = "Bound! A memory index is created.";
+                nextButton.classList.remove('hidden');
+            }, { once: true });
+        }
+        
+        function setupStep5() {
+             gameArea.innerHTML = `
+                <p class="text-gray-400 mb-4">This is important for your exam! Crank up the 'Importance' slider to strengthen the encoding.</p>
+                <div class="w-full max-w-xs flex flex-col items-center">
+                    <div id="memory-orb-s5" class="w-24 h-24 rounded-full bg-purple-500 transition-all duration-500 mb-4"></div>
+                    <label for="importance-slider" class="mb-2">Importance</label>
+                    <input id="importance-slider" type="range" min="0" max="100" value="0" class="w-full">
+                </div>
+             `;
+             const slider = document.getElementById('importance-slider');
+             const orb = document.getElementById('memory-orb-s5');
+             slider.addEventListener('input', () => {
+                 const value = slider.value;
+                 orb.style.boxShadow = `0 0 ${value / 2}px 10px rgba(255, 255, 150, ${value/100})`;
+                 orb.style.transform = `scale(${1 + (value/200)})`;
+                 if (value > 90) {
+                     document.querySelector('.text-gray-400').textContent = "Excellent! The memory is tagged as high-priority.";
+                     nextButton.classList.remove('hidden');
+                 }
+             });
+        }
+        
+        function setupStep6() {
+            gameArea.innerHTML = `
+                <p class="text-gray-400 mb-4">The brain is resting. The Hippocampus is replaying the memory. Click to help strengthen the connections!</p>
+                <div id="consolidation-orb" class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 cursor-pointer flex items-center justify-center text-center">
+                    Click Me!
+                </div>
+                <p class="mt-4">Strength: <span id="strength-val">0</span>%</p>
+            `;
+            const orb = document.getElementById('consolidation-orb');
+            const strengthVal = document.getElementById('strength-val');
+            let strength = 0;
+            orb.addEventListener('click', () => {
+                strength += 10;
+                strengthVal.textContent = strength;
+                orb.classList.add('pulse-animation');
+                orb.style.transform = `scale(${1 + strength/200})`;
+                setTimeout(() => orb.classList.remove('pulse-animation'), 500);
+                if(strength >= 100){
+                    document.querySelector('.text-gray-400').textContent = "The memory is now stable in the Hippocampus!";
+                    orb.style.cursor = 'default';
+                    nextButton.classList.remove('hidden');
+                }
+            });
+        }
+
+        function setupStep7() {
+            gameArea.innerHTML = `<div id="consolidation-container" class="w-full h-full relative flex items-center justify-center"></div>`;
+            const container = document.getElementById('consolidation-container');
+
+            // Represent brain regions simply
+            container.innerHTML = `
+                <div class="absolute top-1/2 -translate-y-1/2 left-8 text-center">
+                    <div class="w-20 h-20 rounded-full bg-red-800/50 flex items-center justify-center">Hippo.</div>
+                </div>
+                <div class="absolute top-1/2 -translate-y-1/2 right-8 text-center">
+                     <div class="w-20 h-20 rounded-full bg-blue-800/50 flex items-center justify-center">Temporal</div>
+                </div>
+                <p class="absolute top-8">The memory is moving to long-term storage...</p>
+            `;
+            
+            const orb = document.createElement('div');
+            orb.className = 'memory-orb';
+            container.appendChild(orb);
+
+            // Animate the orb
+            setTimeout(() => {
+                orb.style.opacity = 1;
+                orb.style.left = 'calc(50% - 30px)';
+                orb.style.top = 'calc(50% - 30px)';
+            }, 100);
+
+            setTimeout(() => {
+                orb.style.left = 'calc(100% - 100px)'; // Move to temporal cortex
+                orb.style.backgroundColor = '#2b6cb0'; // Change color to match temporal
+            }, 1500);
+
+            setTimeout(() => {
+                 document.querySelector('.absolute.top-8').textContent = "Stored in the cortex!";
+                 nextButton.classList.remove('hidden');
+            }, 3500);
+        }
+
+        function setupStep8() {
+            gameArea.innerHTML = `
+                <p class="text-gray-400 mb-4">Time to test your knowledge! What are the powerhouses of the cell?</p>
+                <input id="retrieval-input" type="text" class="w-full max-w-md bg-gray-900 text-white p-2 rounded-lg border-2 border-gray-600 focus:border-teal-400 focus:outline-none" placeholder="Your answer...">
+                <p id="retrieval-feedback" class="mt-2 h-4"></p>
+            `;
+             const input = document.getElementById('retrieval-input');
+             input.addEventListener('input', () => {
+                if (input.value.toLowerCase().includes("mitochondria")) {
+                    document.getElementById('retrieval-feedback').textContent = "Correct! Memory Retrieved!";
+                    document.getElementById('retrieval-feedback').classList.add('text-green-400');
+                    input.disabled = true;
+                    nextButton.classList.remove('hidden');
+                }
+             });
+        }
+        
+        function setupEndScreen() {
+             gameArea.innerHTML = `
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-green-400 mb-4">Memory Successfully Formed!</h2>
+                    <p class="text-lg text-gray-300">You've guided a new fact through the entire learning process. This is how active, focused learning creates strong, lasting knowledge.</p>
+                    <button id="restart-button" class="mt-8 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300">Learn Another Memory</button>
+                </div>
+             `;
+             document.getElementById('restart-button').addEventListener('click', () => {
+                 game.currentStep = 0;
+                 nextButton.classList.add('hidden');
+                 updateUI();
+             });
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Initial setup
+        window.onload = updateUI;
+    </script>
+</body>
+</html>
