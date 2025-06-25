@@ -56,8 +56,8 @@
             transition: width 0.5s ease-in-out;
         }
 
+        /* UPDATED: Removed position: absolute to allow items to flow in a container */
         .distraction {
-            position: absolute;
             background-color: rgba(237, 100, 166, 0.8);
             padding: 8px 16px;
             border-radius: 9999px;
@@ -245,16 +245,22 @@
 
         // --- Step-specific setup functions ---
 
+        // UPDATED: Organizes items in a grid to prevent overlap
         function setupStep1() {
-            gameArea.innerHTML = `<p class="text-gray-400 mb-4">Click on the correct fact to focus your attention!</p>`;
+            gameArea.innerHTML = `
+                <p class="text-gray-400 mb-4">Click on the correct fact to focus your attention!</p>
+                <div id="attention-grid" class="flex flex-wrap justify-center items-center gap-4 p-4">
+                </div>
+            `;
+            const attentionGrid = document.getElementById('attention-grid');
             const allItems = [...game.distractions, game.fact];
             shuffleArray(allItems).forEach(item => {
                 const el = document.createElement('div');
                 el.textContent = item;
-                el.className = 'distraction';
+                el.className = 'distraction'; 
+                
                 if (item === game.fact) {
                     el.id = 'fact-to-learn';
-                    el.style.backgroundColor = 'rgba(66, 153, 225, 0.8)';
                     el.addEventListener('click', () => {
                         gameArea.innerHTML = `<p class="text-2xl text-green-400 font-bold">Focused!</p>`;
                         nextButton.classList.remove('hidden');
@@ -265,10 +271,7 @@
                         el.textContent = 'Distraction!';
                     });
                 }
-                // Position randomly
-                el.style.top = `${Math.random() * 80 + 10}%`;
-                el.style.left = `${Math.random() * 80 + 10}%`;
-                gameArea.appendChild(el);
+                attentionGrid.appendChild(el);
             });
         }
         
